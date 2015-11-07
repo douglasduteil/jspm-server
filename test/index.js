@@ -14,6 +14,11 @@ describe('JSPMServer', function () {
     assert.isFunction(JSPMServer)
   })
 
+  it('should allow mutliple options', function () {
+    var server = JSPMServer({}, {foo: 'bar'}, {qux: 'met'})
+    assert.deepEqual(server.options, {foo: 'bar', qux: 'met'})
+  })
+
   describe('#init', function () {
     beforeEach(function () {
       this.server = JSPMServer({
@@ -36,12 +41,7 @@ describe('JSPMServer', function () {
     beforeEach(function () {
       this.server = JSPMServer({
         root: 'foo',
-        hostname: 'localhost',
-        http2: {
-          key: path.resolve(__dirname, '../ssl/server.key'),
-          cert: path.resolve(__dirname, '../ssl/server.crt'),
-          ca: path.resolve(__dirname, '../ssl/ca.crt')
-        }
+        hostname: 'localhost'
       })
     })
 

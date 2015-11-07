@@ -22,6 +22,7 @@
     "lib/"
   ],
   "scripts": {
+    "prepublish": "npm test && npm run lint",
     "watch": "npm run watch:start --silent & npm run watch:build --silent",
     "test": "mocha",
     "start": "node bin/cli.js",
@@ -38,6 +39,8 @@
   "dependencies": {
     "babel-polyfill": "^6.0.16",
     "connect": "^3.4.0",
+    "lodash.ary": "^3.0.2",
+    "lodash.assign": "^3.2.0",
     "morgan": "^1.6.1",
     "portscanner": "^1.0.0",
     "spdy": "^2.0.5",

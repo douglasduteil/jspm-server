@@ -2,12 +2,12 @@
 
 import 'babel-polyfill'
 import connect from 'connect'
-import fs from 'fs'
 import morgan from 'morgan'
 import portscanner from 'portscanner'
 import send from 'send'
 import spdy from 'spdy'
 import url from 'url'
+import ary from 'lodash.ary'
 
 //
 
@@ -15,8 +15,9 @@ export default server
 
 //
 
-function server (userOptions) {
-  return {start, init}
+function server (...options) {
+  const userOptions = options.reduce(ary(Object.assign), {})
+  return {start, init, options: userOptions}
 
   function init () {
     const app = connect()
@@ -32,11 +33,15 @@ function server (userOptions) {
 
   function start (app, callback) {
     callback = callback || function () {}
-    const options = {
-      ...userOptions.http2,
-      ca: fs.readFileSync(userOptions.http2.ca),
-      cert: fs.readFileSync(userOptions.http2.cert),
-      key: fs.readFileSync(userOptions.http2.key)
+
+    let options = {
+      spdy: {
+        plain: !userOptions.ssl
+      }
+    }
+
+    if (userOptions.ssl) {
+      options = userOptions.ssl
     }
 
     portscanner.findAPortNotInUse(
