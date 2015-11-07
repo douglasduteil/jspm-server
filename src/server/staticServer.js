@@ -7,11 +7,8 @@ import System from 'systemjs'
 //
 
 export default function staticServer ({root}) {
-  console.log(__filename, '#staticServer')
   const SUPPORTED_METHODS = ['GET', 'HEAD']
   return function staticRequest (req, res, next) {
-  console.log(__filename, '#staticRequest')
-  console.log(req.method, req.url)
     if (!SUPPORTED_METHODS.includes(req.method)) {
       return next()
     }
