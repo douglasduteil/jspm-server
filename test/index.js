@@ -49,7 +49,7 @@ describe('JSPMServer', function () {
       assert.isFunction(this.server.start)
     })
 
-    it('should be return a connect app', function (done) {
+    it('should successfully start', function (done) {
       var app = this.server.init()
       this.server.start(app, function (err) {
         assert.notOk(err)

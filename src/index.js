@@ -4,10 +4,12 @@ import 'babel-polyfill'
 import connect from 'connect'
 import morgan from 'morgan'
 import portscanner from 'portscanner'
-import send from 'send'
 import spdy from 'spdy'
-import url from 'url'
 import ary from 'lodash.ary'
+
+//
+
+import {staticStrategy} from './server'
 
 //
 
@@ -15,18 +17,18 @@ export default server
 
 //
 
-function server (...options) {
-  const userOptions = options.reduce(ary(Object.assign), {})
-  return {start, init, options: userOptions}
+function server (...optionsArr) {
+  const options = optionsArr.reduce(ary(Object.assign), {})
+  return {start, init, options}
 
   function init () {
     const app = connect()
 
-    if (userOptions.verbose) {
+    if (options.verbose) {
       app.use(morgan('dev'))
     }
 
-    app.use(staticServer(userOptions.root))
+    app.use(staticStrategy(options))
 
     return app
   }
@@ -34,20 +36,20 @@ function server (...options) {
   function start (app, callback) {
     callback = callback || function () {}
 
-    let options = {
+    let serverOptions = {
       spdy: {
-        plain: !userOptions.ssl
+        plain: !options.ssl
       }
     }
 
-    if (userOptions.ssl) {
-      options = userOptions.ssl
+    if (options.ssl) {
+      serverOptions = options.ssl
     }
 
     portscanner.findAPortNotInUse(
-      userOptions.port,
-      userOptions.port + 1000,
-      userOptions.hostname,
+      options.port,
+      options.port + 1000,
+      options.hostname,
       portFound)
 
     function portFound (error, port) {
@@ -56,28 +58,10 @@ function server (...options) {
         return callback(error)
       }
 
-      const server = spdy.createServer(options, app)
-      server.listen(port, userOptions.hostname, function (request, response) {
-        callback(null, server, userOptions.hostname, port)
+      const server = spdy.createServer(serverOptions, app)
+      server.listen(port, options.hostname, function (request, response) {
+        callback(null, server, options.hostname, port)
       })
     }
-  }
-}
-
-function staticServer (root) {
-  const SUPPORTED_METHODS = ['GET', 'HEAD']
-  return function staticRequest (req, res, next) {
-    if (!SUPPORTED_METHODS.includes(req.method)) {
-      return next()
-    }
-
-    const reqpath = url.parse(req.url).pathname
-
-    send(req, reqpath, { root: root })
-      // .on('error', error)
-      // .on('directory', directory)
-      // .on('file', file)
-      // .on('stream', inject)
-      .pipe(res)
   }
 }
