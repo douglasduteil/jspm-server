@@ -1,60 +1,31 @@
 //
+/*
+return
 
-import {assert} from 'chai'
-import hideStack from 'hide-stack-frames-from'
+import test from 'tape'
 import request from 'supertest'
 import path from 'path'
+import {exec} from 'child_process'
 
+import pkg from '../package.json'
 import JSPMServer from '../src/index'
 
-hideStack('mocha')
+//
+var cli = path.resolve(pkg.bin['jspm-server'])
 
-describe('JSPMServer', function () {
-  it('should be a function', function () {
-    assert.isFunction(JSPMServer)
-  })
+test('CLI: display version')
+describe('CLI run options', function () {
 
-  it('should allow mutliple options', function () {
-    var server = JSPMServer({}, {foo: 'bar'}, {qux: 'met'})
-    assert.deepEqual(server.options, {foo: 'bar', qux: 'met'})
-  })
-
-  describe('#init', function () {
-    beforeEach(function () {
-      this.server = JSPMServer({
-        root: 'foo'
-      })
-    })
-
-    it('should be exposed', function () {
-      assert.isFunction(this.server.init)
-    })
-
-    it('should be return a connect app', function () {
-      var app = this.server.init()
-      assert.isFunction(app)
-      assert.isFunction(app.use)
-    })
-  })
-
-  describe('#start', function () {
-    beforeEach(function () {
-      this.server = JSPMServer({
-        root: 'foo',
-        hostname: 'localhost'
-      })
-    })
-
-    it('should be exposed', function () {
-      assert.isFunction(this.server.start)
-    })
-
-    it('should successfully start', function (done) {
-      var app = this.server.init()
-      this.server.start(app, function (err) {
-        assert.notOk(err)
-        done()
-      })
+  it('should display the version', function () {
+    exec(`node ${cli}`, function (err, stdout, stderr) {
+      expect(stdout).to.contain('Starting \'errorFunction\'');
+      expect(stderr).to.contain('\'errorFunction\' errored after');
+      stdout = stdout.replace(/\\/g, '/').split('\n');
+      expect(stdout[4]).to.contain('Starting \'anon\'');
+      expect(stdout[5]).to.contain('Finished \'anon\'');
+      done();
     })
   })
 })
+
+*/

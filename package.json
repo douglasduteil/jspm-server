@@ -14,7 +14,7 @@
   ],
   "author": "Glen Maddern",
   "bin": {
-    "jspm-server": "bin/cli.js"
+    "jspm-server": "bin/jspm-server-cli.js"
   },
   "main": "lib/index.js",
   "files": [
@@ -22,14 +22,11 @@
     "lib/"
   ],
   "scripts": {
-    "prepublish": "npm test && npm run lint",
-    "watch": "npm run watch:start --silent & npm run watch:build --silent",
-    "test": "mocha",
-    "start": "node bin/cli.js",
-    "watch:start": "nodemon --exec 'npm start --silent' -w lib -w bin -w package.json",
-    "watch:build": "nodemon --exec 'npm run build --silent' -w .babelrc -w src -e 'js,json'",
     "build": "babel src -d lib",
-    "lint": "eslint bin src"
+    "lint": "eslint bin src",
+    "test": "babel-node ./node_modules/.bin/tape 'test/**/*.spec.js' | faucet",
+    "watch:build": "npm run build --silent -- -w",
+    "watch:test": "chokidar '+(src|test)/**/*.js' -c 'npm test --silent' --initial"
   },
   "engines": {
     "node": ">=0.8.0"
@@ -38,11 +35,15 @@
   "license": "MIT",
   "dependencies": {
     "babel-polyfill": "^6.0.16",
+    "chokidar": "^1.2.0",
     "connect": "^3.4.0",
+    "fancy-log": "^1.1.0",
+    "glogg": "^1.0.0",
     "lodash.ary": "^3.0.2",
     "lodash.assign": "^3.2.0",
     "morgan": "^1.6.1",
     "portscanner": "^1.0.0",
+    "serve-static": "^1.10.0",
     "spdy": "^2.0.5",
     "systemjs": "^0.19.5",
     "url": "^0.11.0",
@@ -50,17 +51,16 @@
   },
   "devDependencies": {
     "babel-cli": "^6.1.2",
-    "babel-core": "^6.1.2",
     "babel-plugin-transform-object-rest-spread": "^6.0.14",
     "babel-preset-es2015": "^6.1.2",
-    "chai": "^3.4.0",
+    "chokidar-cli": "^1.1.1",
     "eslint": "^1.9.0",
     "eslint-config-standard": "^4.4.0",
     "eslint-plugin-standard": "^1.3.1",
+    "faucet": "0.0.1",
     "hide-stack-frames-from": "^1.0.0",
-    "mocha": "^2.3.3",
-    "nodemon": "^1.8.1",
     "send": "^0.13.0",
-    "supertest": "^1.1.0"
+    "supertest": "^1.1.0",
+    "tape": "^4.2.2"
   }
 }
