@@ -3,9 +3,10 @@
 import connect from 'connect'
 import morgan from 'morgan'
 import path from 'path'
-import portscanner from 'portscanner'
 import serveStatic from 'serve-static'
 import spdy from 'spdy'
+
+import transformerFiles from './transformerFiles'
 
 //
 
@@ -17,9 +18,8 @@ export default function http2Server ({log, options}) {
   }
 
   // app.use(bundlingStrategy(options))
-
-  log.info(`Serving files from: ${path.relative(process.cwd(), options.root)}`)
-  app.use(serveStatic(options.root))
+  app.use(transformerFiles(options))
+  app.use(serveStatic(path.resolve(process.cwd(), options.root)))
 
   const server = spdy.createServer(options.serverOptions, app)
   return server

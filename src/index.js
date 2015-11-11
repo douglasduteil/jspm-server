@@ -1,6 +1,7 @@
 //
 
 import 'babel-polyfill'
+import path from 'path'
 
 //
 
@@ -20,15 +21,20 @@ export default class JSPMServer {
 
   start () {
     Promise.resolve()
+      // Options post traitment
       .then(resolvePortNumberAsync.bind(null, this.options))
       .then((port) => this.options.port = port)
       .then(logApiUrls.bind(null, this.log, this.options))
 
+      // Initial server
       .then(() => this)
-      .then(function startHttp2Server (instance) {
-        const options = instance.options
-        const server = http2Server(instance)
-        server.listen(options.port, options.hostname)
+      .then(function startHttp2Server (jspmServer) {
+        const options = jspmServer.options
+        const server = http2Server(jspmServer)
+        var relativeRoot = path.relative(process.cwd(), options.root)
+        server.listen(options.port, options.hostname, function () {
+          jspmServer.log.info(`Serving files from: ${relativeRoot.length ? relativeRoot : './'}`)
+        })
         return server
       })
       .then((server) => this.http2Server = server)
@@ -36,56 +42,5 @@ export default class JSPMServer {
         this.log.error(err)
         process.exit(1)
       })
-  }
-}
-
-//
-
-function server (...optionsArr) {
-  const options = optionsArr.reduce(ary(Object.assign), {})
-  return {start, init, options}
-
-  function init () {
-    const app = connect()
-
-    if (options.verbose) {
-      app.use(morgan('dev'))
-    }
-
-    app.use(staticStrategy(options))
-
-    return app
-  }
-
-  function start (app, callback) {
-    callback = callback || function () {}
-
-    let serverOptions = {
-      spdy: {
-        plain: !options.ssl
-      }
-    }
-
-    if (options.ssl) {
-      serverOptions = options.ssl
-    }
-
-    portscanner.findAPortNotInUse(
-      options.port,
-      options.port + 1000,
-      options.hostname,
-      portFound)
-
-    function portFound (error, port) {
-      if (error) {
-        console.error(error)
-        return callback(error)
-      }
-
-      const server = spdy.createServer(serverOptions, app)
-      server.listen(port, options.hostname, function (request, response) {
-        callback(null, server, options.hostname, port)
-      })
-    }
   }
 }

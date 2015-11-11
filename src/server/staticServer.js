@@ -16,10 +16,10 @@ export default function staticServer ({root}) {
     const reqpath = url.parse(req.url).pathname
 
     send(req, reqpath, { root: root })
-      // .on('error', error)
-      // .on('directory', directory)
-      // .on('file', file)
-      // .on('stream', inject)
+    // .on('error', error)
+    // .on('directory', directory)
+    // .on('file', file)
+    // .on('stream', inject)
       .pipe(res)
   }
 }
