@@ -5,6 +5,7 @@ import path from 'path'
 
 //
 
+import InnerBuilder from './innerBuilder'
 import http2Server from './http2Server'
 import logApiUrls from './logApiUrls'
 import logger from './logger'
@@ -20,11 +21,20 @@ export default class JSPMServer {
   }
 
   start () {
-    Promise.resolve()
-      // Options post traitment
+    return Promise.resolve()
+      // Find available port
       .then(resolvePortNumberAsync.bind(null, this.options))
       .then((port) => this.options.port = port)
+
+      // Display it
       .then(logApiUrls.bind(null, this.log, this.options))
+
+      // Setup inner builder
+      .then(() => this)
+      .then(function instanciateBuilder (jspmServer) {
+        jspmServer.builder = new InnerBuilder()
+        jspmServer.log.debug(__filename, '#instanciateBuilder', 'jspmServer.builder')
+      })
 
       // Initial server
       .then(() => this)
@@ -38,9 +48,11 @@ export default class JSPMServer {
         return server
       })
       .then((server) => this.http2Server = server)
+
+      // Error handler
       .catch((err) => {
-        this.log.error(err)
-        process.exit(1)
+        this.log.error('\nError : ')
+        throw err
       })
   }
 }

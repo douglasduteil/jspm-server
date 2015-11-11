@@ -2,6 +2,7 @@
 
 import ary from 'lodash.ary'
 import micromatch from 'micromatch'
+import path from 'path'
 import parseUrl from 'parseurl'
 import hijackResponse from 'hijackresponse'
 import Builder from 'systemjs-builder'
@@ -15,59 +16,61 @@ export default transcludeFiles
 var ALLOWED_METHODS = ['GET', 'HEAD']
 
 // Inspired by https://github.com/expressjs/serve-static/blob/v1.10.0/index.js
-function transcludeFiles ({configFiles}, jsv) {
+function transcludeFiles ({root, transformer}, jspmServer) {
+  if (!transformer) {
+    return function identity (req, res, next) { next() }
+  }
+
+  var {files, configFiles} = transformer
   var builder = new Builder()
-  Promise.all(configFiles.map(ary(builder.loadConfig, 1)))
-    .then(function configFilesLoaded() {
-      jsv.debug(__filename, '#configFilesLoaded', configFiles)
+  var doneLoading = Promise.all(
+      configFiles
+      .map(ary(path.resolve.bind(path, root), 1))
+      .map((configFile) => builder.loadConfig(configFile))
+    )
+    .catch(function (err) {
+      jspmServer.error(err)
+      throw err
     })
-  console.log(, transformers)
-  transformers = transformers.map(instanciateMatcherPerTransformer)
+
+  var isMatching = micromatch.filter(files.pattern, files.options)
+
   return function transcludeFile (req, res, next) {
-    if (!ALLOWED_METHODS.includes(req.method)) {
-      next()
-      return
-    }
-
-    var path = parseUrl(req).pathname.substr(1)
-    var valideTransformers = transformers
-      .filter(({_isMatching}) => _isMatching(path))
-      .map(({transformer}) => transformer)
-
-    if (!valideTransformers.length) {
-      next()
-      return
-    }
-
-    // create send stream
-    hijackResponse(res, function (err, res) {
-      if (err) {
-        res.unhijack()
-        next(err)
+    doneLoading.then(function () {
+      if (!ALLOWED_METHODS.includes(req.method)) {
+        next()
         return
       }
 
-      applyTransformationTo(path, valideTransformers)
-      .then(function (result) {
-        res.setHeader('Content-Length', Buffer.byteLength(result))
-        res.end(result)
-      })
+      var path = parseUrl(req).pathname.substr(1)
+
+      if (!isMatching(path)) {
+        next()
+        return
+      }
+
+      hijackResponse(res, bundleTheResponse(builder, path, next))
+      next()
     })
-    return next()
   }
 }
 
 //
 
-function applyTransformationTo (path, transformers) {
-  return transformers.reduce(
-    (source, transforme) => source.then(transforme),
-    Promise.resolve(path)
-  )
-}
+function bundleTheResponse (builder, path, next) {
+  return function (err, res) {
+    if (err) {
+      res.unhijack()
+      next(err)
+      return
+    }
 
-function instanciateMatcherPerTransformer (transformer) {
-  const {files} = transformer
-  transformer._isMatching = micromatch.filter(files.pattern, files.options)
-  return transformer
+    builder.compile(path)
+      .then(function (result) {
+        const code = result.source
+        res.setHeader('Content-Length', Buffer.byteLength(code))
+        res.end(code)
+        next()
+      })
+  }
 }

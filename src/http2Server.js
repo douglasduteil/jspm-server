@@ -7,10 +7,12 @@ import serveStatic from 'serve-static'
 import spdy from 'spdy'
 
 import transformerFiles from './transformerFiles'
+import appendDepCache from './appendDepCache'
 
 //
 
-export default function http2Server ({log, options}) {
+export default function http2Server (jspmServer) {
+  const {options} = jspmServer
   const app = connect()
 
   if (options.verbose) {
@@ -18,7 +20,8 @@ export default function http2Server ({log, options}) {
   }
 
   // app.use(bundlingStrategy(options))
-  app.use(transformerFiles(options))
+  app.use(appendDepCache(options, jspmServer))
+  app.use(transformerFiles(options, jspmServer))
   app.use(serveStatic(path.resolve(process.cwd(), options.root)))
 
   const server = spdy.createServer(options.serverOptions, app)
