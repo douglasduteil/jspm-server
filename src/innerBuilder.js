@@ -8,7 +8,7 @@ export default InnerBuilder
 
 //
 
-function InnerBuilder () {
-  const builder = new Builder()
+function InnerBuilder (root, configFile) {
+  const builder = new Builder(root, configFile)
   return builder
 }

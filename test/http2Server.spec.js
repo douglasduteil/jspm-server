@@ -29,6 +29,7 @@ test('http2Server', function (t) {
 
   test('http2Server - staticFiles', testStaticFiles)
   test('http2Server - appendDepCache', appendDepCache)
+  test('http2Server - interpretInjectionScript', interpretInjectionScript)
   // test('http2Server - transpileFiles', transpileFiles)
 })
 
@@ -46,16 +47,40 @@ Promise.all(fixtureFolders.map(function (fixtureFolder) {
     .then((server) => servers.set(fixtureFolder, server))
 }))
 
-function before (options) {
-  const builder = new InnerBuilder()
+function before (options = {}) {
+  const builder = options.system && new InnerBuilder(options.root, options.system.configFile)
   var server = http2Server({
     log: logger({ options }),
     builder,
     options
   })
+
   return Promise.resolve()
-    .then(() => builder.loadConfig.bind(builder, options.root))
     .then(() => server)
+}
+
+function interpretInjectionScript (t) {
+  // Given
+  var server = servers.get('interpretInjectionScript')
+
+  // When
+  request(server)
+    .get('/__jspm__.js')
+
+    // Then
+    .expect(200)
+    .expect('Content-Type', /html/)
+    .expect('Content-Length', '159')
+    .end(function (err, rep) {
+      t.error(err, 'Expect no error from GET /__jspm__.js')
+      t.equal(
+        rep.text,
+        `System.config({
+  depCache: {"index.js":['a.js']}
+})`
+        , 'Expect the index.html to contain a `System.config(...)')
+      t.end()
+    })
 }
 
 function appendDepCache (t) {
@@ -69,10 +94,24 @@ function appendDepCache (t) {
     // Then
     .expect(200)
     .expect('Content-Type', /html/)
-    .expect('Content-Length', '123')
+    .expect('Content-Length', '159')
     .end(function (err, rep) {
       t.error(err, 'Expect no error from GET /index.html')
-      t.ok(rep.text.match(/<!DOCTYPE html>/), 'Expect the index.html')
+      t.equal(
+        rep.text,
+        `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+</head>
+<body>
+
+<script src="__jspm__.js"></script>
+</body>
+</html>
+`
+        , 'Expect the index.html to contain a `<script src="__jspm__.js"></script>')
       t.end()
     })
 }

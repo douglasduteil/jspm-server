@@ -8,6 +8,7 @@ import spdy from 'spdy'
 
 import transformerFiles from './transformerFiles'
 import appendDepCache from './appendDepCache'
+import interpretInjectionScript from './interpretInjectionScript'
 
 //
 
@@ -20,6 +21,7 @@ export default function http2Server (jspmServer) {
   }
 
   // app.use(bundlingStrategy(options))
+  app.use(interpretInjectionScript(options, jspmServer))
   app.use(appendDepCache(options, jspmServer))
   app.use(transformerFiles(options, jspmServer))
   app.use(serveStatic(path.resolve(process.cwd(), options.root)))

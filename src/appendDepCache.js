@@ -1,11 +1,10 @@
 //
 
-import ary from 'lodash.ary'
 import micromatch from 'micromatch'
-import path from 'path'
 import parseUrl from 'parseurl'
 import hijackResponse from 'hijackresponse'
 
+import INJECTED_SCRIPT_NAME from './INJECTED_SCRIPT_NAME'
 //
 
 export default appendDepCache
@@ -21,9 +20,7 @@ function appendDepCache ({root, system}, jspmServer) {
     return function identity (req, res, next) { next() }
   }
 
-  const {builder} = jspmServer
-  jspmServer.log.debug(__filename, '#appendDepCache', 'jspmServer.builder')
-  console.dir(jspmServer.builder)
+  const isMatching = micromatch.filter(['*.html'])
 
   return function _appendDepCache (req, res, next) {
     if (!ALLOWED_METHODS.includes(req.method)) {
@@ -31,18 +28,49 @@ function appendDepCache ({root, system}, jspmServer) {
       return
     }
 
-    var path = parseUrl(req).pathname.substr(1)
+    const originalUrl = parseUrl.original(req)
+    let path = parseUrl(req).pathname.substr(1)
+    if (path === '/' && originalUrl.pathname.substr(-1) !== '/') {
+      path = ''
+    }
 
-    console.log(__filename, '#_appendDepCache', 'root')
-    console.dir(root)
-    console.log(__filename, '#_appendDepCache', 'path')
-    console.dir(path)
-    console.log(__filename, '#_appendDepCache', 'path')
-    builder.trace(system.depCache[0])
-      .then(function (tree) {
-        console.dir(tree)
-      })
+    if (!isMatching(path) && path !== '') {
+      next()
+      return
+    }
 
+    hijackResponse(res, addDepCaceToTheResponse(next))
     next()
+  }
+}
+
+//
+
+function addDepCaceToTheResponse (next) {
+  return function (err, res) {
+    if (err) {
+      res.unhijack()
+      next(err)
+      return
+    }
+
+    const chunks = []
+
+    res.on('data', function (chunk) {
+      chunks.push(chunk)
+    })
+
+    res.on('end', function () {
+      var result = Buffer.concat(chunks).toString('utf-8')
+
+      if (BODY_MATCH.test(result)) {
+        const script = `<script src="${INJECTED_SCRIPT_NAME}"></script>`
+        result = result.replace(new RegExp('<!--\\s*__jspm__\\s*-->', 'i'), script)
+      }
+
+      res.setHeader('Content-Length', Buffer.byteLength(result))
+      res.write(new Buffer(result))
+      res.end()
+    })
   }
 }
