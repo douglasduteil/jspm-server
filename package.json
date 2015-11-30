@@ -30,11 +30,13 @@
   "main": "lib/index.js",
   "files": [
     "bin/",
+    "cert",
     "lib/"
   ],
   "scripts": {
     "build": "babel src -d lib",
     "lint": "eslint bin src",
+    "prepublish": "npm run build",
     "test": "babel-node ./node_modules/.bin/tape 'test/**/*.spec.js' | tap-spec",
     "watch:build": "npm run build --silent -- -w",
     "watch:test": "chokidar '+(src|test)/**/*.js' -c 'npm test --silent' --initial"
@@ -55,6 +57,7 @@
     "hijackresponse": "^1.0.2",
     "lodash.ary": "^3.0.2",
     "lodash.assign": "^3.2.0",
+    "lodash.merge": "^3.3.2",
     "micromatch": "^2.3.3",
     "morgan": "^1.6.1",
     "portscanner": "^1.0.0",
