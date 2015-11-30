@@ -4,10 +4,10 @@ export default depCacheScriptTemplate
 
 //
 
-function depCacheScriptTemplate (depCaches) {
+function depCacheScriptTemplate (configObject) {
   return `
-System.config({
-  depCache: ${JSON.stringify(depCaches)}
-})
-  `.trim()
+"use strict"
+
+System.config(${JSON.stringify(configObject, null, '  ')})
+  `.trim() + '\n'
 }

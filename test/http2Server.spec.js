@@ -15,7 +15,7 @@ import InnerBuilder from '../src/innerBuilder'
 test('http2Server', function (t) {
   t.equal(typeof http2Server, 'function', 'http2Server should to be a function')
 
-  var options = {root: '.'}
+  var options = { root: '.' }
   var server = http2Server({
     log: logger({ options }),
     options
@@ -28,16 +28,24 @@ test('http2Server', function (t) {
   //
 
   test('http2Server - staticFiles', testStaticFiles)
-  test('http2Server - appendDepCache', appendDepCache)
-  test('http2Server - interpretInjectionScript', interpretInjectionScript)
-  // test('http2Server - transpileFiles', transpileFiles)
+  test('http2Server - mwAddInjectionScript', mwAddInjectionScript)
+  test('http2Server - mwServeInjectionScript', mwServeInjectionScript)
+  test('http2Server - mwTransformerFiles', mwTransformerFiles)
 })
 
 //
 
 const expectedTranspileFile =
-  fs.readFileSync('./test/fixtures/transpileFiles/expected.js')
-  .toString()
+  fs.readFileSync('./test/fixtures/mwTransformerFiles/expected.js')
+    .toString()
+
+const expectedHtmlFile =
+  fs.readFileSync('./test/fixtures/mwAddInjectionScript/expected.html')
+    .toString()
+
+const expectedInjectionScriptFile =
+  fs.readFileSync('./test/fixtures/mwServeInjectionScript/expected.js')
+    .toString()
 
 const servers = new Map()
 const fixtureFolders = fs.readdirSync('./test/fixtures')
@@ -48,20 +56,21 @@ Promise.all(fixtureFolders.map(function (fixtureFolder) {
 }))
 
 function before (options = {}) {
-  const builder = options.system && new InnerBuilder(options.root, options.system.configFile)
-  var server = http2Server({
+  var jspmServer = {
     log: logger({ options }),
-    builder,
     options
-  })
+  }
 
-  return Promise.resolve()
-    .then(() => server)
+  jspmServer.builder = options.system && new InnerBuilder(options.root, options.system.configFile)
+
+  var server = http2Server(jspmServer)
+
+  return Promise.resolve(server)
 }
 
-function interpretInjectionScript (t) {
+function mwServeInjectionScript (t) {
   // Given
-  var server = servers.get('interpretInjectionScript')
+  var server = servers.get('mwServeInjectionScript')
 
   // When
   request(server)
@@ -69,23 +78,25 @@ function interpretInjectionScript (t) {
 
     // Then
     .expect(200)
-    .expect('Content-Type', /html/)
-    .expect('Content-Length', '159')
+    .expect('Content-Type', /javascript/)
+    // TODO(@douglasduteil): uniform cache time
+    .expect('Cache-Control', 'public, max-age=31536000')
+    // TODO(@douglasduteil): cache timers
+    .expect('Last-Modified', /GMT/)
+    .expect('ETag', '"43-LKACtGP3WzbSr+a4qDcsog"')
     .end(function (err, rep) {
       t.error(err, 'Expect no error from GET /__jspm__.js')
       t.equal(
         rep.text,
-        `System.config({
-  depCache: {"index.js":['a.js']}
-})`
-        , 'Expect the index.html to contain a `System.config(...)')
+        expectedInjectionScriptFile,
+        'Expect the __jspm__.js to contain a `System.config(...)')
       t.end()
     })
 }
 
-function appendDepCache (t) {
+function mwAddInjectionScript (t) {
   // Given
-  var server = servers.get('appendDepCache')
+  var server = servers.get('mwAddInjectionScript')
 
   // When
   request(server)
@@ -93,32 +104,20 @@ function appendDepCache (t) {
 
     // Then
     .expect(200)
+    .expect('X-Hijacked', 'yes!')
     .expect('Content-Type', /html/)
-    .expect('Content-Length', '159')
     .end(function (err, rep) {
       t.error(err, 'Expect no error from GET /index.html')
       t.equal(
-        rep.text,
-        `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Document</title>
-</head>
-<body>
-
-<script src="__jspm__.js"></script>
-</body>
-</html>
-`
-        , 'Expect the index.html to contain a `<script src="__jspm__.js"></script>')
+        rep.text, expectedHtmlFile,
+        'Expect the index.html to contain a `<script src="__jspm__.js"></script>')
       t.end()
     })
 }
 
-function transpileFiles (t) {
+function mwTransformerFiles (t) {
   // Given
-  var server = servers.get('transpileFiles')
+  var server = servers.get('mwTransformerFiles')
 
   // When
   request(server)
@@ -126,11 +125,11 @@ function transpileFiles (t) {
 
     // Then
     .expect(200)
+    .expect('X-Hijacked', 'yes!')
     .expect('Content-Type', /javascript/)
-    .expect('Content-Length', '113')
     .end(function (err, rep) {
       t.error(err, 'Expect no error from GET /index.js')
-      t.equal(rep.text, expectedTranspileFile.slice(0, -1))
+      t.equal(rep.text, expectedTranspileFile, 'Expect transpiled code')
       t.end()
     })
 }
@@ -146,7 +145,6 @@ function testStaticFiles (t) {
     // Then
     .expect(200)
     .expect('Content-Type', /html/)
-    .expect('Content-Length', '123')
     .end(function (err, rep) {
       t.error(err, 'Expect no error from GET /')
       t.ok(rep.text.match(/<!DOCTYPE html>/), 'Expect the index.html')

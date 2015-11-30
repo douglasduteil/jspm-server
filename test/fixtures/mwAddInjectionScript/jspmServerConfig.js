@@ -8,7 +8,7 @@ module.exports = {
     }
   },
   system: {
-    configFile: './test/fixtures/interpretInjectionScript/config.js',
+    configFile: __dirname + '/config.js',
     depCache: ['index.js']
   }
 }

@@ -5,24 +5,28 @@ import parseUrl from 'parseurl'
 import hijackResponse from 'hijackresponse'
 
 import INJECTED_SCRIPT_NAME from './INJECTED_SCRIPT_NAME'
+import Debug from 'debug'
+
 //
 
-export default appendDepCache
+export default mwAddInjectionScript
 
 //
 
 var ALLOWED_METHODS = ['GET']
 var BODY_MATCH = /<body[^>]*>/i
+const debug = Debug('JSPMServer:mwAddInjectionScript')
 
 // Inspired by https://github.com/expressjs/serve-static/blob/v1.10.0/index.js
-function appendDepCache ({root, system}, jspmServer) {
+function mwAddInjectionScript ({root, system}, jspmServer) {
+  debug('setup')
   if (!system) {
     return function identity (req, res, next) { next() }
   }
 
   const isMatching = micromatch.filter(['*.html'])
 
-  return function _appendDepCache (req, res, next) {
+  return function _mwAddInjectionScript (req, res, next) {
     if (!ALLOWED_METHODS.includes(req.method)) {
       next()
       return
@@ -39,6 +43,8 @@ function appendDepCache ({root, system}, jspmServer) {
       return
     }
 
+    debug('matching "%s"', path)
+
     hijackResponse(res, addDepCaceToTheResponse(next))
     next()
   }
@@ -53,6 +59,8 @@ function addDepCaceToTheResponse (next) {
       next(err)
       return
     }
+
+    res.setHeader('X-Hijacked', 'yes!')
 
     const chunks = []
 

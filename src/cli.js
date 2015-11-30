@@ -21,6 +21,7 @@ export default yargs
     'Show help': chalk.gray('Show help'),
     'Show version number': chalk.gray('Show version number')
   })
+
 // TODO(douglasduteil): get feedback about wrapping before removing this
 // .wrap(yargs.terminalWidth())
 //

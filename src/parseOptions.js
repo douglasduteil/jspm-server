@@ -11,7 +11,8 @@ export default parseOptions
 //
 
 var DEFAULT_CONFIG = {
-  cwd: process.cwd()
+  cwd: process.cwd(),
+  system: {}
 }
 
 var ROOT_PATH = path.resolve.bind(path, __dirname, '..')
@@ -23,11 +24,15 @@ function parseOptions (...optionsArr) {
 }
 
 function parseOption (options) {
-  const userConfig = options.config ? require(path.resolve(options.config)) : {}
-  options = merge(options, userConfig)
+  if (options.config) {
+    const userConfig = options.config ? require(path.resolve(options.config)) : {}
+    options = merge(options, userConfig)
+  }
 
-  //options.serverOptions = defineServerOptions(options)
-  options.root = path.resolve(options.cwd, options.root)
+  options.serverOptions = defineServerOptions(options)
+  if (options.cwd && options.root) {
+    options.root = path.resolve(options.cwd, options.root)
+  }
   options.protocol = `http${options.ssl ? 's' : ''}`
   return options
 }
@@ -39,11 +44,9 @@ function defineServerOptions (options) {
 
   return {
     spdy: {plain: false},
-    ssl: {
-      ca: rootPathReadSync('ssl/ca.crt'),
-      cert: rootPathReadSync('ssl/server.crt'),
-      key: rootPathReadSync('ssl/server.key')
-    }
+    requestCert: false,
+    cert: rootPathReadSync('cert/cert.pem'),
+    key: rootPathReadSync('cert/key.pem')
   }
 }
 

@@ -11,7 +11,9 @@ module.exports = {
     files: {
       // https://www.npmjs.com/package/micromatch#matcher
       pattern: '*.js'
-    },
-    configFiles: ['./config.js']
+    }
+  },
+  system: {
+    configFiles: [__dirname + './config.js']
   }
 }
