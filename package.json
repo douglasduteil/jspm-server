@@ -1,6 +1,6 @@
 {
-  "name": "jspm-server",
-  "version": "1.0.0-alpha",
+  "name": "douglasduteil...jspm-server",
+  "version": "1.0.0-beta",
   "description": "JSPM development server prototype",
   "keywords": [
     "front-end",
@@ -12,7 +12,18 @@
     "jspm",
     "cli"
   ],
-  "author": "Glen Maddern",
+  "author": {
+    "name": "Douglas Duteil",
+    "email": "douglasduteil@gmail.com"
+  },
+  "homepage": "http://github.com/douglasduteil/jspm-server",
+  "bugs": {
+    "url": "http://github.com/douglasduteil/jspm-server/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/douglasduteil/jspm-server.git"
+  },
   "bin": {
     "jspm-server": "bin/jspm-server-cli.js"
   },
@@ -31,8 +42,7 @@
   "engines": {
     "node": ">=0.8.0"
   },
-  "preferGlobal": true,
-  "license": "MIT",
+  "license": "WTFPL",
   "dependencies": {
     "babel-polyfill": "^6.2.4",
     "chokidar": "^1.3.0",
@@ -71,13 +81,5 @@
     "supertest": "^1.1.0",
     "tap-spec": "^4.1.1",
     "tape": "^4.2.2"
-  },
-  "jspm": {
-    "dependencies": {},
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.8.24",
-      "babel-runtime": "npm:babel-runtime@^5.8.24",
-      "core-js": "npm:core-js@^1.1.4"
-    }
   }
 }
