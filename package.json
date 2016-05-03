@@ -37,7 +37,9 @@
     "build": "babel src -d lib",
     "lint": "eslint bin src",
     "prepublish": "npm run build",
-    "test": "babel-node ./node_modules/.bin/tape 'test/**/*.spec.js' | tap-spec",
+    "test": "npm run test:unit && npm run test:cli",
+    "test:cli": "npm run build && babel-node ./node_modules/.bin/tape 'test/cli/*.spec.js' | tap-spec",
+    "test:unit": "babel-node ./node_modules/.bin/tape 'test/*.spec.js' | tap-spec",
     "watch:build": "npm run build --silent -- -w",
     "watch:test": "chokidar '+(src|test)/**/*.js' -c 'npm test --silent' --initial"
   },
