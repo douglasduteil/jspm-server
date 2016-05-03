@@ -22,7 +22,7 @@ jspm-server
 
 [npm-url]: https://npmjs.org/package/douglasduteil...jspm-server
 [npm-image]: http://img.shields.io/npm/v/douglasduteil...jspm-server.svg
-[travis-url]: http://travis-ci.org/douglasduteil/douglasduteil...jspm-server
-[travis-image]: http://travis-ci.org/douglasduteil/douglasduteil...jspm-server.svg?branch=master
+[travis-url]: http://travis-ci.org/douglasduteil/jspm-server
+[travis-image]: http://travis-ci.org/douglasduteil/jspm-server.svg?branch=master
 [unmaintained-image]: http://unmaintained.tech/badge.svg
 [unmaintained-url]: http://unmaintained.tech
