@@ -2,10 +2,25 @@
 git:
   depth: 1
 sudo: false
+cache:
+  directories:
+  - node_modules
 language: node_js
-node_js:
-- '0.10'
-- '0.12'
-- '4.0'
-- '5.0'
-- 'stable'
+matrix:
+  include:
+    #
+    - node_js: '0.8'
+    - node_js: '0.10'
+    - node_js: '0.11'
+    - node_js: '0.12'
+    - node_js: '1'
+    - node_js: '2'
+    - node_js: '3'
+    - node_js: '4'
+    - node_js: '5'
+    - node_js: node
+before_install:
+  - "NPM_VERSION=$(npm --version)"
+  - "[ '2.0.0' != `echo -e \"2.0.0\\n$NPM_VERSION\" | sort -Vr | head -n1` ] || npm install -g npm@2"
+  - "NPM_VERSION=$(npm --version)"
+  - "[ '3.0.0' != `echo -e \"3.0.0\\n$NPM_VERSION\" | sort -Vr | head -n1` ] || npm install -g npm"
