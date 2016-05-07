@@ -2,7 +2,6 @@
 
 import send from 'send'
 import url from 'url'
-import System from 'systemjs'
 
 //
 
