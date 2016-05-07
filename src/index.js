@@ -29,7 +29,7 @@ export default class JSPMServer {
     return Promise.resolve()
       // Find available port
       .then(resolvePortNumberAsync.bind(null, this.options))
-      .then((port) => this.options.port = port)
+      .then((port) => { this.options.port = port })
       .then(() => debug('resolve with port %d', this.options.port))
 
       // Display it
@@ -62,12 +62,12 @@ export default class JSPMServer {
         var relativeRoot = path.relative(process.cwd(), options.root)
         server.listen(options.port, options.hostname, function () {
           debug('server listening')
-          jspmServer.log.info(`Server ready`)
+          jspmServer.log.info('Server ready')
           jspmServer.log.info(`Serving files from: ${relativeRoot.length ? relativeRoot : './'}`)
         })
         return server
       })
-      .then((server) => this.http2Server = server)
+      .then((server) => { this.http2Server = server })
 
       // Error handler
       .catch((err) => {
